@@ -8,13 +8,15 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/customer", session({
+// Session configuration
+app.use(session({
     secret: "fingerprint_customer",
     resave: true,
     saveUninitialized: true
 }));
 
-app.use("/customer/auth/*", function auth(req, res, next) {
+// Authentication middleware for customer auth and review operations
+app.use(["/customer/auth/*", "/review/*", "/auth/*"], function auth(req, res, next) {
     if (req.session && req.session.authorization) {
         let token = req.session.authorization['accessToken'];
         jwt.verify(token, "access", (err, user) => {
@@ -32,7 +34,9 @@ app.use("/customer/auth/*", function auth(req, res, next) {
 
 const PORT = 5000;
 
+// Mount customer routes at /customer and root / so /login and /review work directly
 app.use("/customer", customer_routes);
+app.use("/", customer_routes);
 app.use("/", genl_routes);
 
 app.listen(PORT, () => console.log("Server is running on port " + PORT));
